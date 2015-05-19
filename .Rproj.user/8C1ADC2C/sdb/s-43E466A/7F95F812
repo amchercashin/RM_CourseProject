@@ -1,0 +1,17 @@
+{
+    "contents" : "---\ntitle: \"Regression Models Course Project\"\nauthor: \"Alexander Cherkashin\"\ndate: \"Tuesday, May 19, 2015\"\noutput: pdf_document\n---\n\n## Summary\nIn this paper we will look at the data set of a collection of cars that is built in in R (`mtcacars`) and explore the relationship betweeen a set of variables and miles per gallon (MPG). We will find is automatic (A/T) or manual (M/T) transmission is better for MPG and how much better (higher MPG is better).\n\n## Exploratory data analysis\nThe dimensions of `mtcars` are `r dim(mtcars)` we have 32 different cars and 11 variables. Descrition of variables is available by `?mtcars`. The mean MPG for A/T is `r round(mean(mtcars$mpg[mtcars$am==0]),2)` and for M/T is `r round(mean(mtcars$mpg[mtcars$am==1]),2)`. Looks like M/T is better for MPG, but there are other variables that could affect MPG and thus adjust the transmission effect.\n\n## Relationship between variables and MPG. Model selection.\nThe simpliest regression model would be just take in account transmission factor variable (`am`): `lm(mpg ~ am, mtcars)` which yields us the intercept coefficients for M/T and A/T. They are just the mean values from previous paragrath. This model is like two horizontal parralell lines at their intersepts with the difference `lm(mpg ~ am, mtcars)$coef[2]` = `r round(mean(mtcars$mpg[mtcars$am==1]),2)` - `r round(mean(mtcars$mpg[mtcars$am==0]),2)` = `r round(lm(mpg ~ am, mtcars)$coef[2],2)`.\n\nBut as we said earlier there could be other highly correlated to MPG variables that could adjut the effect. The correlation coefficients between MPG and other variables are: `r paste0(names(cor(mtcars)[,1][-1]),\": \",round(cor(mtcars)[,1][-1],2))`\n\nClearly there are highly correlated variables. But to prevent variance inflation in beta coefficients we should carefully select them and try to select mostly uncorrelated ones. The fist best candidate for regressor is weight (`wt`). It is higly correlated with MPG and at the same time it should affect it from expirience.\n\n##Is an automatic or manual transmission is better for MGP",
+    "created" : 1432026163082.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1157430677",
+    "id" : "7F95F812",
+    "lastKnownWriteTime" : 1432041155,
+    "path" : "~/DataScience/RG/CourseProject/paper.Rmd",
+    "project_path" : "paper.Rmd",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_markdown"
+}
