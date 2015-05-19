@@ -16,6 +16,6 @@ The simpliest regression model would be just take in account transmission factor
 
 But as we said earlier there could be other highly correlated to MPG variables that could adjut the effect. The correlation coefficients between MPG and other variables are: `r paste0(names(cor(mtcars)[,1][-1]),": ",round(cor(mtcars)[,1][-1],2))`
 
-Clearly there are highly correlated variables. But to prevent variance inflation in beta coefficients we should carefully select them and try to select mostly uncorrelated ones. The fist best candidate for regressor is weight (`wt`). It is higly correlated with MPG and at the same time it should affect it from expirience.
+Clearly there are highly correlated variables. But to prevent variance inflation with no in beta coefficients we should carefully select them and try to select mostly uncorrelated ones. The fist best candidate for regressor is weight (`wt`). It is higly correlated with MPG and at the same time it should affect it from expirience.
 
 ##Is an automatic or manual transmission is better for MGP
