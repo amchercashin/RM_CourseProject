@@ -3,19 +3,64 @@ title: "Regression Models Course Project"
 author: "Alexander Cherkashin"
 date: "Tuesday, May 19, 2015"
 output: pdf_document
+fontsize: 10pt
+geometry: margin=0.8in
 ---
 
 ## Summary
-In this paper we will look at the data set of a collection of cars that is built in in R (`mtcacars`) and explore the relationship betweeen a set of variables and miles per gallon (MPG). We will find is automatic (A/T) or manual (M/T) transmission is better for MPG and how much better (higher MPG is better).
+In this paper we'll look at the `mtcacars` - built into R data set and explore the relationship betweeen set of variables and miles per gallon (MPG). We'll try to answer is automatic (A/T) or manual (M/T) transmission is better for MPG and if it is then for how much better (higher MPG is better). We'll find that with `mtcars` data we can't be sure that transmission type has any influence.
 
 ## Exploratory data analysis
-The dimensions of `mtcars` are `r dim(mtcars)` we have 32 different cars and 11 variables. Descrition of variables is available by `?mtcars`. The mean MPG for A/T is `r round(mean(mtcars$mpg[mtcars$am==0]),2)` and for M/T is `r round(mean(mtcars$mpg[mtcars$am==1]),2)`. Looks like M/T is better for MPG, but there are other variables that could affect MPG and thus adjust the transmission effect.
+The dimensions of `mtcars` are `r dim(mtcars)`. We have 32 different cars and 11 variables. Variables descrition is available by `?mtcars`. The mean MPG for A/T is `r round(mean(mtcars$mpg[mtcars$am==0]),2)` and for M/T is `r round(mean(mtcars$mpg[mtcars$am==1]),2)`. Looks like M/T is better for MPG, but there are other variables that could affect MPG and thus adjust the transmission effect.
 
 ## Relationship between variables and MPG. Model selection.
-The simpliest regression model would be just take in account transmission factor variable (`am`): `lm(mpg ~ am, mtcars)` which yields us the intercept coefficients for M/T and A/T. They are just the mean values from previous paragrath. This model is like two horizontal parralell lines at their intersepts with the difference `lm(mpg ~ am, mtcars)$coef[2]` = `r round(mean(mtcars$mpg[mtcars$am==1]),2)` - `r round(mean(mtcars$mpg[mtcars$am==0]),2)` = `r round(lm(mpg ~ am, mtcars)$coef[2],2)`.
+The simpliest regression model would be just take in account transmission factor variable (`am`): `lm(mpg ~ am, mtcars)` which yields us the interception coefficients for M/T and A/T. They are just the mean values from previous paragrath. This model is like two horizontal parralell lines at their intersepts with the difference `lm(mpg ~ am, mtcars)$coef[2]` = `r round(mean(mtcars$mpg[mtcars$am==1]),2)` - `r round(mean(mtcars$mpg[mtcars$am==0]),2)` = `r round(lm(mpg ~ am, mtcars)$coef[2],2)`.
 
-But as we said earlier there could be other highly correlated to MPG variables that could adjut the effect. The correlation coefficients between MPG and other variables are: `r paste0(names(cor(mtcars)[,1][-1]),": ",round(cor(mtcars)[,1][-1],2))`
+Let's look at other correlated to MPG variables. The correlation coefficients between MPG and other variables are: `r paste0(names(cor(mtcars)[,1][-1]),": ",round(cor(mtcars)[,1][-1],2))`
 
-Clearly there are highly correlated variables. But to prevent variance inflation with no in beta coefficients we should carefully select them and try to select mostly uncorrelated ones. The fist best candidate for regressor is weight (`wt`). It is higly correlated with MPG and at the same time it should affect it from expirience.
+Clearly there are highly correlated variables. But to prevent variance inflation in beta coefficients with no positive overall effect we should carefully select them. The fist best candidate for a regressor is weight (`wt`). It is higly correlated with MPG and at the same time it should affect it from expirience: you need more energy to move more weight. 
+
+There should be another variable that reflects the effectivines of such moving of one point of weight, something with the engine that provides power. And we have some candidates: number of cyllinders (`cyl`) and gross hp (`hp`) of the engine are highly correleated with MPG. But there is high correlation between them: `r round(cor(mtcars$cyl, mtcars$hp),2)` and it seems that both of them could describe mostly the same part of mpg variance. Correlation between `wt` and `hp` is: `r round(cor(mtcars$wt, mtcars$hp),2)`, and it is less then between `wt` and `cyl` is: `r round(cor(mtcars$wt, mtcars$cyl),2)`. We'll choose only `hp` for our models for that reasons.
+
+We'll fit three models and compare them by ANOVA test: ordinary model with just `am` variable, model with `wt` and `hp` regressors, model with interaction between `wt` and `hp` in case their interdependancy is not linear for MPG.
+
+```{r,echo=FALSE}
+fit1 <- lm(mpg ~ am , mtcars)
+fit2 <- lm(mpg ~ am + wt + hp, mtcars)
+fit3 <- lm(mpg ~ am + wt * hp, mtcars)
+anova(fit1, fit2, fit3)
+```
+
+We can see that `fit3` model has the lowest residuals squares sum (RSS) and the p-value is small enought that we could be confident in this result. To be sure we must check residuals normality. Lets, look at QQ plot's and perform `shapiro.test` on residuals:
+
+```{r, echo=FALSE, fig.height=3}
+par(mfrow=c(1,3))
+plot(fit1, which=2, caption=list("","fit1 QQ"))
+plot(fit2, which=2, caption=list("","fit2 QQ"))
+plot(fit3, which=2, caption=list("","fit3 QQ"))
+```
+The results of `sapiro.test`:
+```{r, echo=FALSE}
+t<-cbind(unlist(shapiro.test(fit1$resid))[2], unlist(shapiro.test(fit2$resid))[2], unlist(shapiro.test(fit3$resid))[2])
+colnames(t)<-c("fit1", "fit2", "fit3")
+t[1:3]<- round(as.numeric(t[1:3]),2)
+t
+```
+
+Residuals destributions appears to be close to normal.
 
 ##Is an automatic or manual transmission is better for MGP
+
+To answer this question we choose `fit3` model. Let's look at `summary(fit3)$coef`:
+
+```{r,echo=FALSE}
+summary(fit3)$coef
+```
+
+From `mtcars` dictionary `am` = 0 mean A/T and `am` = 1 means M/T.
+
+`am` coefficient is 0.125 and it should indicate that car with M/T could travel further then a car with A/T by 0.125 miles for each gallon if both cars has the same weight and horse power. But the p-value of `am` coefficient is 0.926 high and thus **we can't reject the null hypothesis that the true impact (coefficient) of `am` iz zero**. 
+
+Answering the question of this paper we can't say that either A/T or M/T is better for MPG. It looks like that weight and horse power have the most and sustainable impact and **true influense of transmission could be zero with p-value 0.926**. On a given data with `fit3` model.
+
+For reproduceability purpose all the code is availible at github: https://github.com/amchercashin/RM_CourseProject.
