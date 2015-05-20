@@ -39,7 +39,9 @@ plot(fit1, which=2, caption=list("","fit1 QQ"))
 plot(fit2, which=2, caption=list("","fit2 QQ"))
 plot(fit3, which=2, caption=list("","fit3 QQ"))
 ```
+
 The results of `sapiro.test`:
+
 ```{r, echo=FALSE}
 t<-cbind(unlist(shapiro.test(fit1$resid))[2], unlist(shapiro.test(fit2$resid))[2], unlist(shapiro.test(fit3$resid))[2])
 colnames(t)<-c("fit1", "fit2", "fit3")
